@@ -447,3 +447,19 @@ docker rm beneficiaries-container
 - Esta configuración está orientada a demostración
   local, no a producción.
 
+
+## Pruebas manuales con REST Client
+
+El proyecto incluye el archivo `beneficiaries.http`
+con ejemplos de las cuatro operaciones REST.
+
+Para ejecutarlo:
+
+1. Abrir el proyecto en Visual Studio Code.
+2. Instalar la extensión REST Client.
+3. Iniciar el microservicio Quarkus.
+4. Abrir `beneficiaries.http`.
+5. Seleccionar "Send Request" en la petición deseada.
+
+También es posible ejecutar las operaciones
+mediante Postman o los ejemplos curl del README.

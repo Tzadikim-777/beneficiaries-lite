@@ -1,0 +1,24 @@
+
+### 1. Registrar beneficiario
+POST http://localhost:8080/api/v1/beneficiaries
+Content-Type: application/json
+
+{
+  "customerId": "12345678",
+  "alias": "Proveedor principal",
+  "holderName": "Juan Perez",
+  "clabe": "032180000118359719",
+  "maxAmount": 15000.00,
+  "email": "juan@example.com"
+}
+
+### 2. Consultar beneficiario por ID
+# Sustituir 1 por el ID generado
+GET http://localhost:8080/api/v1/beneficiaries/1
+
+### 3. Listar beneficiarios activos
+GET http://localhost:8080/api/v1/beneficiaries?customerId=12345678
+
+### 4. Desactivar beneficiario
+# Sustituir 1 por el ID generado
+PATCH http://localhost:8080/api/v1/beneficiaries/1/deactivate
