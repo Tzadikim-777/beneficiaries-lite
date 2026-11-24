@@ -386,3 +386,64 @@ de datos y rollback transaccional.
   estrictamente ante peticiones simultáneas.
 - No se configura una base de datos productiva.
 
+
+## Ejecución con Docker
+
+El proyecto incluye un Dockerfile para ejecutar
+el microservicio en un contenedor con Java 17.
+
+### 1. Compilar el proyecto
+
+```bash
+./mvnw clean package
+```
+
+### 2. Construir la imagen
+
+```bash
+docker build -t beneficiaries-lite:1.0 .
+```
+
+### 3. Ejecutar el contenedor
+
+```bash
+docker run -d \
+  --name beneficiaries-container \
+  -p 8080:8080 \
+  beneficiaries-lite:1.0
+```
+
+### 4. Verificar el funcionamiento
+
+Health Check:
+
+http://localhost:8080/q/health
+
+Swagger UI:
+
+http://localhost:8080/q/swagger-ui
+
+### 5. Consultar los logs
+
+```bash
+docker logs beneficiaries-container
+```
+
+### 6. Detener y eliminar el contenedor
+
+```bash
+docker stop beneficiaries-container
+docker rm beneficiaries-container
+```
+
+### Consideraciones
+
+- Se utiliza Java 17 como runtime.
+- La aplicación se expone en el puerto 8080.
+- La imagen utiliza temporalmente el perfil dev.
+- H2 se ejecuta en memoria.
+- Los datos no persisten al eliminar o reiniciar
+  el proceso de la aplicación.
+- Esta configuración está orientada a demostración
+  local, no a producción.
+
