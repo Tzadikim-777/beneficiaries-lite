@@ -8,8 +8,18 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import mx.com.empresa.backend.domain.exception.BeneficiaryNotFoundException;
+import mx.com.empresa.backend.domain.exception.BeneficiaryAlreadyInactiveException;
+
+import static org.mockito.Mockito.never;
+import static org.mockito.ArgumentMatchers.any;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -127,5 +137,155 @@ class BeneficiaryServiceTest {
 		assertEquals("032180000118359719", savedArgument.getClabe());
 		assertEquals(BeneficiaryStatus.ACTIVE, savedArgument.getStatus());
 	}
+
+	@Test
+	void getById_shouldReturnBeneficiary_whenExists() {
+
+		// Arrange
+		Long id = 1L;
+
+		Beneficiary beneficiary = new Beneficiary(id, "12345678", "Proveedor", "Juan Perez", "032180000118359719",
+				"032", new BigDecimal("15000.00"), "juan@example.com", BeneficiaryStatus.ACTIVE, LocalDateTime.now());
+
+		when(repository.findById(id)).thenReturn(Optional.of(beneficiary));
+
+		// Act
+		BeneficiaryResponse response = service.getById(id);
+
+		// Assert
+		assertNotNull(response);
+		assertEquals(id, response.getId());
+		assertEquals("12345678", response.getCustomerId());
+		assertEquals("Proveedor", response.getAlias());
+
+		verify(repository).findById(id);
+	}
+
+	@Test
+	void listActiveByCustomerId_shouldReturnActiveBeneficiaries() {
+
+		// Arrange
+		String customerId = "12345678";
+
+		Beneficiary beneficiary = new Beneficiary(1L, customerId, "Proveedor", "Juan Perez", "032180000118359719",
+				"032", new BigDecimal("15000.00"), "juan@example.com", BeneficiaryStatus.ACTIVE, LocalDateTime.now());
+
+		when(repository.findActiveByCustomerId(customerId)).thenReturn(List.of(beneficiary));
+
+		// Act
+		List<BeneficiaryResponse> responses = service.listActiveByCustomerId(customerId);
+
+		// Assert
+		assertEquals(1, responses.size());
+		assertEquals(1L, responses.get(0).getId());
+		assertEquals(customerId, responses.get(0).getCustomerId());
+		assertEquals(BeneficiaryStatus.ACTIVE, responses.get(0).getStatus());
+
+		verify(repository).findActiveByCustomerId(customerId);
+	}
+
+	@Test
+	void listActiveByCustomerId_shouldReturnEmptyList() {
+
+		// Arrange
+		String customerId = "87654321";
+
+		when(repository.findActiveByCustomerId(customerId)).thenReturn(List.of());
+
+		// Act
+		List<BeneficiaryResponse> responses = service.listActiveByCustomerId(customerId);
+
+		// Assert
+		assertNotNull(responses);
+		assertTrue(responses.isEmpty());
+
+		verify(repository).findActiveByCustomerId(customerId);
+	}
+	
+
+@Test
+void deactivate_shouldChangeStatusAndSave() {
+
+    // Arrange
+    Long id = 1L;
+
+    Beneficiary beneficiary = new Beneficiary(
+            id,
+            "12345678",
+            "Proveedor",
+            "Juan Perez",
+            "032180000118359719",
+            "032",
+            new BigDecimal("15000.00"),
+            "juan@example.com",
+            BeneficiaryStatus.ACTIVE,
+            LocalDateTime.now()
+    );
+
+    when(repository.findById(id))
+            .thenReturn(Optional.of(beneficiary));
+
+    // Act
+    service.deactivate(id);
+
+    // Assert
+    assertEquals(BeneficiaryStatus.INACTIVE,
+            beneficiary.getStatus());
+
+    verify(repository).findById(id);
+    verify(repository).save(beneficiary);
+}
+
+@Test
+void deactivate_shouldThrowNotFound_whenBeneficiaryDoesNotExist() {
+
+    // Arrange
+    Long id = 999L;
+
+    when(repository.findById(id))
+            .thenReturn(Optional.empty());
+
+    // Act & Assert
+    assertThrows(
+            BeneficiaryNotFoundException.class,
+            () -> service.deactivate(id)
+    );
+
+    verify(repository).findById(id);
+    verify(repository, never()).save(any());
+}
+
+@Test
+void deactivate_shouldThrowConflict_whenAlreadyInactive() {
+
+    // Arrange
+    Long id = 1L;
+
+    Beneficiary beneficiary = new Beneficiary(
+            id,
+            "12345678",
+            "Proveedor",
+            "Juan Perez",
+            "032180000118359719",
+            "032",
+            new BigDecimal("15000.00"),
+            "juan@example.com",
+            BeneficiaryStatus.INACTIVE,
+            LocalDateTime.now()
+    );
+
+    when(repository.findById(id))
+            .thenReturn(Optional.of(beneficiary));
+
+    // Act & Assert
+    assertThrows(
+            BeneficiaryAlreadyInactiveException.class,
+            () -> service.deactivate(id)
+    );
+
+    verify(repository).findById(id);
+    verify(repository, never()).save(any());
+}
+
 
 }
